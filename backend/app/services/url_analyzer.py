@@ -51,15 +51,18 @@ def _basic_rules(url: str) -> Tuple[RiskLevel, float, str]:
     reason_text = "; ".join(reasons) if reasons else "No obvious red flags detected"
     return risk_level, score, reason_text
 
-def analyze_url(url: str) -> ScanResult:
-    scan_id = hashlib.sha256(url.encode()).hexdigest()
-    risk, score, reason = _basic_rules(url)
+def analyze_url(url) -> ScanResult:
+    # Convert HttpUrl to string at the beginning
+    url_str = str(url)
+    
+    scan_id = hashlib.sha256(url_str.encode()).hexdigest()
+    risk, score, reason = _basic_rules(url_str)
 
     return ScanResult(
         id=scan_id,
-        url=url,
+        url=url_str,
         risk_level=risk,
         score=score,
         reason=reason,
-        scanned_at=datetime.utcnow(),
+        created_at=datetime.utcnow(),
     )
