@@ -48,6 +48,11 @@ export function UrlInputForm() {
     setIsLoading(true)
 
     try {
+      // Calculate minimum display time (3 seconds per message * number of messages)
+      const minimumDuration = scanningMessages.length * 3000
+      const startTime = Date.now()
+
+      // Make the API call
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/scan`, {
         method: "POST",
         headers: {
@@ -61,6 +66,15 @@ export function UrlInputForm() {
       }
 
       const data = await response.json()
+
+      // Calculate how much time has elapsed
+      const elapsedTime = Date.now() - startTime
+      const remainingTime = minimumDuration - elapsedTime
+
+      // If the API responded too quickly, wait for the remaining time
+      if (remainingTime > 0) {
+        await new Promise((resolve) => setTimeout(resolve, remainingTime))
+      }
 
       const scanId = urlUtils.generateScanId()
       const normalizedUrl = urlUtils.normalizeUrl(url)
