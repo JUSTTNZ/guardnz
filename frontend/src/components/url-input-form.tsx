@@ -13,7 +13,7 @@ export function UrlInputForm() {
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
 
@@ -24,22 +24,47 @@ export function UrlInputForm() {
 
     setIsLoading(true)
 
-    // Simulate a brief scan delay
-    setTimeout(() => {
+    try {
+      const response = await fetch("http://localhost:8000/api/v1/scan", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ url }),
+      })
+
+      if (!response.ok) {
+        throw new Error(`Scan failed: ${response.statusText}`)
+      }
+
+      const data = await response.json()
+
       const scanId = urlUtils.generateScanId()
       const normalizedUrl = urlUtils.normalizeUrl(url)
-      const risk = urlUtils.getPlaceholderRisk(normalizedUrl)
+
+      // Map backend risk_level to frontend risk
+      const riskMapping: Record<string, "safe" | "warning" | "danger"> = {
+        clean: "safe",
+        warning: "warning",
+        malicious: "danger",
+      }
 
       const record: ScanRecord = {
         id: scanId,
         url: normalizedUrl,
-        risk,
+        risk: riskMapping[data.risk_level as keyof typeof riskMapping] || "warning",
+        score: data.score,
+        reasons: data.reasons || [],
         created_at: new Date().toISOString(),
       }
 
       storageUtils.addToHistory(record)
       router.push(`/result/${scanId}`)
-    }, 300)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An error occurred during scanning")
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (

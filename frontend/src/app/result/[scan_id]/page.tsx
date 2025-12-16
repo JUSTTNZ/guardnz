@@ -2,7 +2,9 @@ import { GuardnzLogo } from "@/components/logo"
 import { FooterText } from "@/components/footer-text"
 import { ResultContent } from "@/components/result-content"
 
-export default function ResultPage({ params }: { params: { scan_id: string } }) {
+export default async function ResultPage({ params }: { params: Promise<{ scan_id: string }> }) {
+  const { scan_id } = await params
+
   return (
     <main className="flex-1 flex flex-col justify-between cyber-grid">
       {/* Header */}
@@ -16,7 +18,7 @@ export default function ResultPage({ params }: { params: { scan_id: string } }) 
       {/* Main content */}
       <div className="flex-1 flex flex-col items-center justify-center px-4 py-12">
         <div className="w-full max-w-2xl">
-          <ResultContent scanId={params.scan_id} />
+          <ResultContent scanId={scan_id} />
         </div>
       </div>
 

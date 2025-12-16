@@ -57,6 +57,25 @@ export function ResultContent({ scanId }: ResultContentProps) {
       <div className="bg-card border border-border rounded-lg p-6">
         <p className="text-muted-foreground text-sm mb-4">Analysis Result:</p>
         <RiskBadge risk={record.risk} size="lg" />
+        <div className="mt-4 space-y-2">
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">Risk Score:</span>
+            <span className="text-lg font-bold font-mono">{record.score}/100</span>
+          </div>
+          {record.reasons && record.reasons.length > 0 && (
+            <div>
+              <p className="text-sm text-muted-foreground mb-2">Analysis Details:</p>
+              <ul className="space-y-1">
+                {record.reasons.map((reason, index) => (
+                  <li key={index} className="text-sm text-foreground flex items-start gap-2">
+                    <span className="text-muted-foreground">•</span>
+                    <span>{reason}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Actions */}
