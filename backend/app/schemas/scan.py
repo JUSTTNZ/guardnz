@@ -1,6 +1,7 @@
 from datetime import datetime
 from enum import Enum
-from pydantic import BaseModel, HttpUrl
+from pydantic import BaseModel
+
 
 class RiskLevel(str, Enum):
     safe = "safe"
@@ -8,11 +9,10 @@ class RiskLevel(str, Enum):
     danger = "danger"
 
 class ScanRequest(BaseModel):
-    url: HttpUrl
-
+    url: str
 class ScanResult(BaseModel):
     id: str
-    url: HttpUrl
+    url: str
     risk_level: RiskLevel
     score: float
     reason: str
