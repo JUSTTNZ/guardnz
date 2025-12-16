@@ -1,0 +1,15 @@
+{
+  "client": {
+    "clientId": "guardnz",
+    "clientVersion": "1.0"
+  },
+  "threatInfo": {
+    "threatTypes": ["MALWARE"],
+    "platformTypes": ["ANY_PLATFORM"],
+    "threatEntryTypes": ["URL"],
+    "threatEntries": [
+      { "url": "http://testsafebrowsing.appspot.com/s/malware.html" }
+    ]
+  }
+}
+

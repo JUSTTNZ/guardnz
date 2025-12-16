@@ -7,6 +7,7 @@ class Settings(BaseSettings):
     SUPABASE_ANON_KEY: str
     SUPABASE_SERVICE_ROLE_KEY: str
     SUPABASE_TABLE: str = "scans"
+    SAFE_BROWSING_KEY: str
 
     class Config:
         env_file = ".env"
