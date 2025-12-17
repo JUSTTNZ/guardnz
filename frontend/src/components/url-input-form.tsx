@@ -12,6 +12,7 @@ export function UrlInputForm() {
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [scanningText, setScanningText] = useState(0)
+  const [isCopied, setIsCopied] = useState(false)
   const router = useRouter()
 
   const scanningMessages = [
@@ -104,6 +105,18 @@ export function UrlInputForm() {
     }
   }
 
+  const handleCopy = async () => {
+    if (!url.trim()) return
+
+    try {
+      await navigator.clipboard.writeText(url)
+      setIsCopied(true)
+      setTimeout(() => setIsCopied(false), 2000)
+    } catch (err) {
+      console.error("Failed to copy:", err)
+    }
+  }
+
   return (
     <form onSubmit={handleSubmit} className="w-full max-w-2xl mx-auto px-4">
       <div className="space-y-4">
@@ -116,10 +129,48 @@ export function UrlInputForm() {
               setError("")
             }}
             placeholder="Paste a link here to scan..."
-            className="w-full px-6 py-4 bg-card border-2 border-border rounded-lg text-foreground placeholder-muted-foreground focus:outline-none focus:border-primary transition-colors text-base"
+            className="w-full px-6 py-4 pr-12 bg-card border-2 border-border rounded-lg text-foreground placeholder-muted-foreground focus:outline-none focus:border-primary transition-colors text-base"
             disabled={isLoading}
             autoFocus
           />
+          {url.trim() && (
+            <button
+              type="button"
+              onClick={handleCopy}
+              disabled={isLoading}
+              className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-muted-foreground hover:text-primary transition-colors disabled:opacity-50"
+              title="Copy URL"
+            >
+              {isCopied ? (
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5 text-green-500"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              ) : (
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                </svg>
+              )}
+            </button>
+          )}
         </div>
 
         {error && <p className="text-destructive text-sm flex items-center gap-2">⚠ {error}</p>}

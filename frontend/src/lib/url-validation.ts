@@ -6,10 +6,15 @@ export const urlUtils = {
       if (!trimmed) return false
 
       // Add protocol if missing
-      const withProtocol =
-        trimmed.startsWith("http://") || trimmed.startsWith("https://") ? trimmed : `https://${trimmed}`
+      const withProtocol = trimmed.startsWith("http://") || trimmed.startsWith("https://") ? trimmed : `https://${trimmed}`
 
-      new URL(withProtocol)
+      const url = new URL(withProtocol)
+
+      // Ensure hostname contains at least one dot (indicating a proper domain)
+      if (!url.hostname.includes(".")) {
+        return false
+      }
+
       return true
     } catch {
       return false
