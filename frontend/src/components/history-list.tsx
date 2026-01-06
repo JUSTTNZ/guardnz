@@ -44,8 +44,7 @@ export function HistoryList() {
             <div className="flex-1 min-w-0">
               <p className="text-foreground break-all font-mono text-sm mb-2">{record.url}</p>
               <div className="flex items-center gap-2 mb-1">
-                <RiskBadge risk={record.risk} size="sm" />
-                <span className="text-xs text-muted-foreground font-mono">{record.score}/100</span>
+                <RiskBadge risk_level={record.risk_level} size="sm" />
               </div>
               <p className="text-xs text-muted-foreground">{new Date(record.created_at).toLocaleString()}</p>
             </div>

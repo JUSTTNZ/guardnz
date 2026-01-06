@@ -2,9 +2,17 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
-import { Shield, AlertTriangle, AlertOctagon, Search, Link2, FileText, Save, CheckCircle, Loader2 } from "lucide-react"
+import { Shield, AlertTriangle, AlertOctagon, Search, Link2, FileText, Save, CheckCircle, Loader2, Globe, ExternalLink, Eye } from "lucide-react"
 import { storageUtils, type ScanRecord } from "@/lib/storage"
+import { riskConfig } from "@/lib/risk-config"
 import { RiskBadge } from "./risk-badge"
+
+interface EvidenceData {
+  final_url: string
+  screenshot: string
+  domains_contacted: string[]
+  verdict_score: number
+}
 
 interface ResultContentProps {
   scanId: string
@@ -15,17 +23,49 @@ export function ResultContent({ scanId }: ResultContentProps) {
   const [isSaved, setIsSaved] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [showContent, setShowContent] = useState(false)
+  const [evidence, setEvidence] = useState<EvidenceData | null>(null)
+  const [evidenceError, setEvidenceError] = useState(false)
+  const [isEvidenceLoading, setIsEvidenceLoading] = useState(false)
 
   useEffect(() => {
-    const data = storageUtils.getHistoryById(scanId)
-    setRecord(data || null)
-    setIsLoading(false)
-    
-    // Trigger animation after data loads
-    if (data) {
+    const record = storageUtils.getHistoryById(scanId)
+    if (record) {
+      setRecord(record)
+      setIsLoading(false)
       setTimeout(() => setShowContent(true), 100)
+    } else {
+      setIsLoading(false)
     }
   }, [scanId])
+
+  useEffect(() => {
+    if (record && record.risk_level && record.risk_level !== "safe") {
+      setIsEvidenceLoading(true)
+      fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/scan/evidence/${scanId}`)
+        .then((response) => {
+          if (response.ok) {
+            return response.json()
+          } else if (response.status === 404) {
+            setEvidenceError(true)
+            return null
+          } else {
+            throw new Error('Failed to fetch evidence')
+          }
+        })
+        .then((data) => {
+          if (data) {
+            setEvidence(data)
+          }
+        })
+        .catch((error) => {
+          console.error('Error fetching evidence:', error)
+          setEvidenceError(true)
+        })
+        .finally(() => {
+          setIsEvidenceLoading(false)
+        })
+    }
+  }, [record, scanId])
 
   const handleSaveToHistory = () => {
     setIsSaved(true)
@@ -33,37 +73,7 @@ export function ResultContent({ scanId }: ResultContentProps) {
     setTimeout(() => setIsSaved(false), 2000)
   }
 
-  const getRiskIcon = (risk: string) => {
-    switch (risk) {
-      case "safe":
-        return <Shield className="w-20 h-20 text-green-500" />
-      case "warning":
-        return <AlertTriangle className="w-20 h-20 text-yellow-500" />
-      case "danger":
-        return <AlertOctagon className="w-20 h-20 text-red-500" />
-      default:
-        return <Search className="w-20 h-20 text-primary" />
-    }
-  }
 
-  const getRiskMessage = (risk: string) => {
-    switch (risk) {
-      case "safe":
-        return "This link appears to be safe"
-      case "warning":
-        return "Exercise caution with this link"
-      case "danger":
-        return "This link may be dangerous"
-      default:
-        return "Analysis complete"
-    }
-  }
-
-  const getScoreColor = (score: number) => {
-    if (score >= 80) return "text-red-500"
-    if (score >= 50) return "text-yellow-500"
-    return "text-green-500"
-  }
 
   if (isLoading) {
     return (
@@ -96,53 +106,17 @@ export function ResultContent({ scanId }: ResultContentProps) {
 
   return (
     <div className={`space-y-6 transition-all duration-700 ${showContent ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-      {/* Hero Result Section */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-card via-card to-card/80 border-2 border-border rounded-2xl p-8 shadow-lg">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-        
-        <div className="relative space-y-6">
-          {/* Status Icon and Message */}
-          <div className="text-center space-y-3">
-            <div className="animate-bounce-slow inline-block">
-              {getRiskIcon(record.risk)}
-            </div>
-            <h2 className="text-2xl font-bold text-foreground">
-              {getRiskMessage(record.risk)}
-            </h2>
-          </div>
+      {/* A. Risk Badge */}
+      <div className="bg-card border border-border rounded-xl p-6 space-y-4">
+        <RiskBadge risk_level={record.risk_level} size="lg" />
+      </div>
 
-          {/* Risk Badge */}
-          <div className="flex justify-center">
-            <div className="transform hover:scale-105 transition-transform">
-              <RiskBadge risk={record.risk} size="lg" />
-            </div>
-          </div>
-
-          {/* Score Display */}
-          <div className="bg-background/50 backdrop-blur-sm rounded-xl p-6 border border-border/50">
-            <div className="flex items-center justify-between">
-              <span className="text-muted-foreground font-medium">Risk Score</span>
-              <div className="flex items-baseline gap-2">
-                <span className={`text-5xl font-bold font-mono ${getScoreColor(record.score)}`}>
-                  {record.score}
-                </span>
-                <span className="text-2xl text-muted-foreground font-mono">/100</span>
-              </div>
-            </div>
-            
-            {/* Score Bar */}
-            <div className="mt-4 h-3 bg-muted rounded-full overflow-hidden">
-              <div 
-                className={`h-full rounded-full transition-all duration-1000 ease-out ${
-                  record.score >= 80 ? 'bg-red-500' : 
-                  record.score >= 50 ? 'bg-yellow-500' : 
-                  'bg-green-500'
-                }`}
-                style={{ width: `${record.score}%` }}
-              />
-            </div>
-          </div>
-        </div>
+      {/* B. What this link is */}
+      <div className="bg-card border border-border rounded-xl p-6">
+        <h3 className="text-lg font-semibold text-foreground mb-3">What this link is</h3>
+        <p className="text-foreground">
+          {record.source ? `This link claims to be from ${record.source}` : `This link points to an unknown website (${record.domain})`}
+        </p>
       </div>
 
       {/* URL Display */}
@@ -158,20 +132,17 @@ export function ResultContent({ scanId }: ResultContentProps) {
         </div>
       </div>
 
-      {/* Analysis Details */}
+      {/* C. Why GuardNZ flagged it */}
       {record.reasons && record.reasons.length > 0 && (
         <div className="bg-card border border-border rounded-xl p-6 space-y-4">
-          <div className="flex items-center gap-2">
-            <FileText className="w-6 h-6 text-primary" />
-            <h3 className="text-lg font-semibold text-foreground">Analysis Details</h3>
-          </div>
+          <h3 className="text-lg font-semibold text-foreground">Why GuardNZ flagged it</h3>
           <ul className="space-y-3">
             {record.reasons.map((reason, index) => (
-              <li 
-                key={index} 
+              <li
+                key={index}
                 className="flex items-start gap-3 p-3 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors"
-                style={{ 
-                  animation: `fadeInUp 0.5s ease-out ${index * 0.1}s both` 
+                style={{
+                  animation: `fadeInUp 0.5s ease-out ${index * 0.1}s both`
                 }}
               >
                 <span className="text-primary text-lg mt-0.5">•</span>
@@ -182,9 +153,93 @@ export function ResultContent({ scanId }: ResultContentProps) {
         </div>
       )}
 
+      {/* D. Evidence section */}
+      <div className="bg-card border border-border rounded-xl p-6 space-y-4">
+        <h3 className="text-lg font-semibold text-foreground">Deep Scan Evidence</h3>
+        {record.risk_level !== "safe" ? (
+          isEvidenceLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="w-6 h-6 text-primary animate-spin mr-2" />
+              <span className="text-muted-foreground">Loading evidence...</span>
+            </div>
+          ) : evidence ? (
+          <div className="space-y-4">
+            {/* Screenshot */}
+            {evidence.screenshot && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Eye className="w-5 h-5 text-primary" />
+                  <span className="text-sm font-medium text-foreground">Screenshot Preview</span>
+                </div>
+                <div className="border border-border rounded-lg overflow-hidden">
+                  <img
+                    src={evidence.screenshot}
+                    alt="Website screenshot"
+                    className="w-full h-auto max-h-64 object-cover"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none'
+                    }}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Final redirect URL */}
+            {evidence.final_url && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <ExternalLink className="w-5 h-5 text-primary" />
+                  <span className="text-sm font-medium text-foreground">Final Redirect URL</span>
+                </div>
+                <p className="text-sm text-muted-foreground break-all bg-muted/30 p-3 rounded-lg">
+                  {evidence.final_url}
+                </p>
+              </div>
+            )}
+
+            {/* Domains contacted */}
+            {evidence.domains_contacted && evidence.domains_contacted.length > 0 && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Globe className="w-5 h-5 text-primary" />
+                  <span className="text-sm font-medium text-foreground">Domains Contacted</span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {evidence.domains_contacted.map((domain, index) => (
+                    <span
+                      key={index}
+                      className="px-3 py-1 bg-muted/30 text-sm text-muted-foreground rounded-full"
+                    >
+                      {domain}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+          ) : evidenceError ? (
+            <div className="text-center py-8">
+              <span className="text-muted-foreground">Deep scan still running or unavailable</span>
+            </div>
+          ) : null
+        ) : (
+          <div className="text-center py-8">
+            <span className="text-muted-foreground">Deep scan not required for safe links</span>
+          </div>
+        )}
+      </div>
+
       {/* Timestamp */}
       <div className="text-center text-sm text-muted-foreground">
         Scanned on {new Date(record.created_at).toLocaleString()}
+      </div>
+
+      {/* E. Safety Advice */}
+      <div className="bg-card border border-border rounded-xl p-6">
+        <h3 className="text-lg font-semibold text-foreground mb-3">Safety Advice</h3>
+        <p className="text-foreground">
+          {record.risk_level && riskConfig[record.risk_level] ? riskConfig[record.risk_level].advice : "Loading advice..."}
+        </p>
       </div>
 
       {/* Actions */}

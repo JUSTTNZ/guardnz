@@ -14,6 +14,7 @@ def create_app() -> FastAPI:
     CORSMiddleware,
     allow_origins=[
         "https://guardnz.vercel.app",
+        "http://localhost:3000",
     ],
     allow_credentials=False,
     allow_methods=["POST", "GET", "OPTIONS"],

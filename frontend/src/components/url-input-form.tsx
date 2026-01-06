@@ -77,27 +77,21 @@ export function UrlInputForm() {
         await new Promise((resolve) => setTimeout(resolve, remainingTime))
       }
 
-      const scanId = urlUtils.generateScanId()
       const normalizedUrl = urlUtils.normalizeUrl(url)
 
-      // Map backend risk_level to frontend risk
-      const riskMapping: Record<string, "safe" | "warning" | "danger"> = {
-        clean: "safe",
-        warning: "warning",
-        malicious: "danger",
-      }
-
       const record: ScanRecord = {
-        id: scanId,
+        id: data.id,
         url: normalizedUrl,
-        risk: riskMapping[data.risk_level as keyof typeof riskMapping] || "warning",
+        risk_level: data.risk_level,
         score: data.score,
         reasons: data.reasons || [],
+        domain: data.domain,
+        source: data.source,
         created_at: new Date().toISOString(),
       }
 
       storageUtils.addToHistory(record)
-      router.push(`/result/${scanId}`)
+      router.push(`/result/${data.id}`)
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred during scanning")
     } finally {

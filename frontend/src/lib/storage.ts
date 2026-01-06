@@ -1,9 +1,11 @@
 export interface ScanRecord {
   id: string
   url: string
-  risk: "safe" | "warning" | "danger"
+  risk_level: "safe" | "warning" | "danger"
   score: number
   reasons: string[]
+  domain: string
+  source: string | null
   created_at: string
 }
 
