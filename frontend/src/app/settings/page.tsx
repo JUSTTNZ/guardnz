@@ -1,9 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import Link from "next/link"
-import { GuardnzLogo } from "@/components/logo"
-import { FooterText } from "@/components/footer-text"
+import { Settings, Sparkles, User, Trash2, Loader2, AlertTriangle } from "lucide-react"
 import { DeleteDataModal } from "@/components/delete-data-modal"
 import { storageUtils } from "@/lib/storage"
 
@@ -26,90 +24,117 @@ export default function SettingsPage() {
 
   const handleDeleteData = () => {
     storageUtils.clearAllData()
-    // Reset animations to default
     setAnimationsEnabled(true)
   }
 
   if (isLoading) {
     return (
-      <main className="flex-1 flex flex-col justify-between cyber-grid">
-        <header className="border-b border-border py-6 px-4">
-          <div className="max-w-2xl mx-auto flex items-center">
-            <GuardnzLogo className="w-8 h-8 text-primary" />
-            <h1 className="text-xl font-bold neon-glow ml-3">GUARDNZ</h1>
+      <main className="flex-1 flex flex-col cyber-grid relative overflow-hidden">
+        <div className="gradient-orb gradient-orb-1" />
+        <div className="gradient-orb gradient-orb-2" />
+        <div className="flex-1 flex items-center justify-center relative z-10">
+          <div className="flex flex-col items-center gap-4">
+            <Loader2 className="w-8 h-8 text-primary animate-spin" />
+            <p className="text-muted-foreground">Loading settings...</p>
           </div>
-        </header>
-        <div className="flex-1 flex items-center justify-center">
-          <p className="text-muted-foreground">Loading settings...</p>
         </div>
-        <footer className="border-t border-border py-6 px-4">
-          <FooterText />
-        </footer>
       </main>
     )
   }
 
   return (
-    <main className="flex-1 flex flex-col justify-between cyber-grid">
-      {/* Header */}
-      <header className="border-b border-border py-6 px-4">
-        <div className="max-w-2xl mx-auto flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-            <GuardnzLogo className="w-8 h-8 text-primary" />
-            <h1 className="text-xl font-bold neon-glow">GUARDNZ</h1>
-          </Link>
-        </div>
-      </header>
+    <main className="flex-1 flex flex-col cyber-grid relative overflow-hidden">
+      {/* Background gradient orbs */}
+      <div className="gradient-orb gradient-orb-1" />
+      <div className="gradient-orb gradient-orb-2" />
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col px-4 py-12">
-        <div className="max-w-2xl mx-auto w-full space-y-8">
-          <h2 className="text-3xl font-bold text-foreground">Settings</h2>
+      <div className="flex-1 flex flex-col px-4 py-8 md:py-12 relative z-10">
+        <div className="max-w-2xl mx-auto w-full space-y-6">
+          {/* Page header */}
+          <div className="flex items-center gap-3 mb-8">
+            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+              <Settings className="w-5 h-5 text-primary" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-foreground">Settings</h1>
+              <p className="text-sm text-muted-foreground">Customize your experience</p>
+            </div>
+          </div>
 
           {/* Animations Toggle */}
-          <section className="bg-card border border-border rounded-lg p-6 space-y-4">
+          <section className="glass-card p-6">
             <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-semibold text-foreground">UI Animations</h3>
-                <p className="text-muted-foreground text-sm">Enable smooth transitions and animations</p>
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <Sparkles className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <h3 className="text-base font-semibold text-foreground">UI Animations</h3>
+                  <p className="text-sm text-muted-foreground">Enable smooth transitions and visual effects</p>
+                </div>
               </div>
               <button
                 onClick={handleAnimationToggle}
-                className={`relative w-14 h-8 rounded-full transition-colors ${animationsEnabled ? "bg-primary" : "bg-muted"}`}
+                className={`relative w-14 h-8 rounded-full transition-all flex-shrink-0 ${
+                  animationsEnabled
+                    ? "bg-primary shadow-[0_0_15px_rgba(0,255,136,0.4)]"
+                    : "bg-muted"
+                }`}
               >
                 <div
-                  className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full transition-transform ${animationsEnabled ? "translate-x-6" : ""}`}
+                  className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full transition-transform shadow-md ${
+                    animationsEnabled ? "translate-x-6" : ""
+                  }`}
                 />
               </button>
             </div>
           </section>
 
           {/* Future Features */}
-          <section className="bg-card border border-border rounded-lg p-6 space-y-4 opacity-60">
-            <h3 className="text-lg font-semibold text-muted-foreground">Account Features</h3>
-            <p className="text-muted-foreground text-sm">Account sync and advanced security features coming soon.</p>
+          <section className="glass-card p-6 opacity-60">
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center flex-shrink-0">
+                <User className="w-5 h-5 text-muted-foreground" />
+              </div>
+              <div>
+                <h3 className="text-base font-semibold text-muted-foreground">Account Features</h3>
+                <p className="text-sm text-muted-foreground">
+                  Account sync and advanced security features coming soon
+                </p>
+                <span className="inline-block mt-2 px-3 py-1 text-xs font-medium bg-muted rounded-full text-muted-foreground">
+                  Coming Soon
+                </span>
+              </div>
+            </div>
           </section>
 
           {/* Danger Zone */}
-          <section className="bg-card border border-destructive rounded-lg p-6 space-y-4">
-            <h3 className="text-lg font-semibold text-destructive">Danger Zone</h3>
-            <button
-              onClick={() => setShowDeleteModal(true)}
-              className="w-full py-3 px-4 rounded-lg border border-destructive text-destructive hover:bg-destructive/10 transition-colors font-semibold"
-            >
-              Delete All Local Data
-            </button>
-            <p className="text-muted-foreground text-xs">
-              This will permanently delete all your scan history and preferences. This action cannot be undone.
-            </p>
+          <section className="glass-card p-6 border-destructive/30">
+            <div className="flex items-start gap-4 mb-4">
+              <div className="w-10 h-10 rounded-xl bg-destructive/10 flex items-center justify-center flex-shrink-0">
+                <AlertTriangle className="w-5 h-5 text-destructive" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-base font-semibold text-destructive">Danger Zone</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Permanently delete all your local data including scan history and preferences
+                </p>
+                <button
+                  onClick={() => setShowDeleteModal(true)}
+                  className="flex items-center justify-center gap-2 w-full py-3 px-4 rounded-xl border-2 border-destructive/50 text-destructive hover:bg-destructive/10 hover:border-destructive transition-all font-semibold"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Delete All Local Data
+                </button>
+                <p className="text-xs text-muted-foreground mt-3">
+                  This action cannot be undone. All your data will be permanently removed.
+                </p>
+              </div>
+            </div>
           </section>
         </div>
       </div>
-
-      {/* Footer */}
-      <footer className="border-t border-border py-6 px-4">
-        <FooterText />
-      </footer>
 
       {/* Modal */}
       <DeleteDataModal

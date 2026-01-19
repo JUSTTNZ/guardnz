@@ -29,7 +29,9 @@ export const storageUtils = {
   addToHistory: (record: ScanRecord) => {
     if (typeof window === "undefined") return
     const history = storageUtils.getHistory()
-    const updated = [record, ...history]
+    // Remove any existing record with the same ID to prevent duplicates
+    const filtered = history.filter((r) => r.id !== record.id)
+    const updated = [record, ...filtered]
     localStorage.setItem(STORAGE_KEYS.HISTORY, JSON.stringify(updated))
   },
 

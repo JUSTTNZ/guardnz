@@ -1,31 +1,42 @@
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException
 from app.api.v1.services.scanner import merge_scan_results
 from app.services.deep_scan_trigger import trigger_deep_scan_async
+from app.services.supabase_client import save_scan, save_scan_evidence
+
+
+
+# 🔴 FILE LOAD CONFIRMATION (VERY IMPORTANT)
+print(">>> LOADED SCAN ROUTE FILE <<<")
 
 router = APIRouter()
 
 AUTO_DEEP_SCAN_LEVELS = {"warning", "danger"}
 
 @router.post("/scan")
-async def scan_url(request: Request):
+def scan_url(payload: dict):
+    # 🔴 ENDPOINT HIT CONFIRMATION
+    print(">>> SCAN ENDPOINT HIT <<<")
+
     try:
-        data = await request.json()
-    except Exception:
-        raise HTTPException(status_code=400, detail="Invalid JSON")
+        url = payload.get("url")
+        if not isinstance(url, str) or not url.strip():
+            raise HTTPException(status_code=400, detail="URL is required")
 
-    url = data.get("url")
+        url = url.strip()
 
-    if not isinstance(url, str) or not url.strip():
-        raise HTTPException(status_code=400, detail="URL is required")
+        # 1. Main scan
+        result = merge_scan_results(url)
+        save_scan(result)
 
-    url = url.strip()
+        if result["risk_level"] in AUTO_DEEP_SCAN_LEVELS:
+            print(f"[scan] triggering deep scan for scan_id={result['id']}")
+            trigger_deep_scan_async(url, result["id"])
 
-    # Main scan
-    result = merge_scan_results(url)
+        else:
+            print("DEEP SCAN NOT REQUIRED")
 
-    # Phase 7: auto deep scan trigger
-    if result["risk_level"] in AUTO_DEEP_SCAN_LEVELS:
-        trigger_deep_scan_async(url, result["id"])
+        return result
 
-
-    return result
+    except Exception as e:
+        print("SCAN ERROR:", e)
+        raise HTTPException(status_code=500, detail=str(e))

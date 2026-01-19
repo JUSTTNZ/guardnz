@@ -1,0 +1,19 @@
+from fastapi import APIRouter
+from app.services.supabase_client import get_scan_evidence
+
+router = APIRouter()
+
+@router.get("/scan/evidence/{scan_id}")
+def get_scan_evidence_endpoint(scan_id: str):
+    evidence = get_scan_evidence(scan_id)
+
+    if not evidence:
+        return {
+            "status": "pending",
+            "message": "Deep scan queued or in progress"
+        }
+
+    return {
+        "status": "completed",
+        "evidence": evidence
+    }
